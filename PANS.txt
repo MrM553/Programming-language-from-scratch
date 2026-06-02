@@ -1,0 +1,2 @@
+INCLUDE tests.txt
+TESTADDITION
