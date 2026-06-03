@@ -34,9 +34,13 @@ class Function():
         self.end = end
         self.parameterStack = []
 
-
+# all information about an active function
+class FunctionStack():
+    def __init__(self,function,namespace):
+        self.function = function
+        self.namespace = namespace
 variables = [ DataType("BIT",0,0,0)]
-cache = [[]]
+cache = []
 functions  = []
 
 whiles = []
@@ -48,47 +52,39 @@ def GetType(name):
 
 def GetFunction(name):
      return next ((f for f in functions if(f.name == name)),None)
-def GetVariable(name,f,convert):
-    var = next(
-        (cell for row in cache
-         for cell in row
+
+def GetVariable(name,f):
+    var = search_variable(name,f)
+    return var
+def search_variable(name,f):
+    var = None
+    if f is not None :
+        var = next(
+        (cell for cell in f.namespace
+         if cell.name == name),
+        None
+        )
+    
+    if(var is None): var = next(
+        (cell for cell in cache
          if cell.name == name),
         None
     )
-    if var != None or f == None: return var 
-    name = ConvertName(name,f,convert)
-    var = next(
-        (cell for row in cache
-         for cell in row
-         if cell.name == name),
-        None
-    )
-    return var
-def DeleteVariable(name):
-    var = next(
-    (
-        (row, cell)
-        for row in cache
-        for cell in row
-        if cell.name == name
-    ),
-    (None, None)
-    )
 
-    row, cell = var
-
-    if cell is not None:
-        row.remove(cell)
     return var
-def ConvertName(name,f,convert):
-    l = len(f.parameterStack)
-    for i in range (0,l):
-        if name == f.parameterStack[i].name:
-            return convert[i]
-    return name
-def Print(coms,f,convert):
+
+def DeleteVariable(name,f):
+    var = GetVariable(name,None)
+    if var is not None:
+        cache.remove(var)
+    var = GetVariable(name,f)
+    if var is not None:
+        f.namespace.remove(var)
+    return var
+
+def Print(coms,f):
     if(len(coms) != 2 ): Error("Print Wrong")
-    v = GetVariable(coms[1],f,convert)
+    v = GetVariable(coms[1],f)
     if v == None: Error("NO Variable Found Print")
     if v.type !=  0: Error("Tried to Print a non BIT")
     if v.origin1  == 1: print("1")
@@ -100,14 +96,14 @@ def AddVariable( coms):
     if (not any(coms[3] == p.name for p in variables )): Error("Variable unknown")
     if(any(coms[1] == p.name for p in variables )): Error("Variable name taken")
     variables.append(DataType(coms[1],coms[2],coms[3],len(variables)))
-    cache.append([])
     if(debugMode) : print("new Variable : " + coms[1]," has " + coms[2]," and " + coms[3])
 
-def Declare(coms):
+def Declare(coms,f):
     if (len(coms) != 3): Error ("Wrong Declare")
     t = GetType(coms[1])
     if(t == None) : Error("Variable Type Not Found")
-    cache[t.index].append(CreateVariable(coms[2],t.index))
+    if ( f == None): cache.append(CreateVariable(coms[2],t.index))
+    else : f.namespace.append(CreateVariable(coms[2],t.index))
     if(debugMode): print ("Sucsessfully Declared Variable")
 
 def CreateVariable(name,type):
@@ -115,24 +111,24 @@ def CreateVariable(name,type):
 
 
 #todo mach types
-def Assign(coms,f,convert):
+def Assign(coms,f):
     if(len (coms) != 4): Error("NOT 4 COMMANDS WITH ASSIGN")
-    v = GetVariable(coms[1],f,convert)
+    v = GetVariable(coms[1],f)
     if v == None: Error("Varialbe to AAssign Not Found")
     
-    vL = GetVariable(coms[2],f,convert)
+    vL = GetVariable(coms[2],f)
     if vL ==None: Error("ASSIGNING VARIABLE NOT FOUND")
 
-    vR = GetVariable(coms[3],f,convert)
+    vR = GetVariable(coms[3],f)
     if vR == None: Error("ASSIGNING VARIABLE NOT FOUND")
 
 
-    Copy(v,vL,vR)
+    CopyAssign(v,vL,vR)
   
     if debugMode : print("ASSIGNED NEW VARIABLE SUCCESFULL")
-def Destroy(coms):
+def Destroy(coms,f):
     if(len (coms) != 2): Error("NOT 2 COMMANDS WITH DESTROY")
-    v = DeleteVariable(coms[1])
+    v = DeleteVariable(coms[1],f)
     if v == None: Error("Varialbe to Destroy Not Found")
     
     
@@ -141,15 +137,15 @@ def Destroy(coms):
     
   
     if debugMode : print("DESTOYED VARIABLE SUCCESFULL")
-def Decompose(coms,f,convert):
+def Decompose(coms,f):
     if(len (coms) != 4): Error("NOT 4 COMMANDS WITH DECOMPOSE")
-    v = GetVariable(coms[1],f,convert)
+    v = GetVariable(coms[1],f)
     if v == None: Error("Varialbe to Decompose Not Found")
     
-    vL = GetVariable(coms[2],f,convert)
+    vL = GetVariable(coms[2],f)
     if vL ==None: Error("Decompose VARIABLE NOT FOUND")
 
-    vR = GetVariable(coms[3],f,convert)
+    vR = GetVariable(coms[3],f)
     if vR == None: Error("Decomposed VARIABLE NOT FOUND")
 
     vL.origin1 = copy.deepcopy(v.origin1.origin1)
@@ -160,38 +156,41 @@ def Decompose(coms,f,convert):
     #DeCopy(v,vL,vR)
   
     if debugMode : print("DECOMPOSE  VARIABLE SUCCESFULL")
-def Copy(variable, v1, v2):
+def CopyAssign(variable, v1, v2):
     variable.origin1 = copy.deepcopy(v1)
     variable.origin2 = copy.deepcopy(v2)
 
+def Copy(variable , toCopy):
+    toCopy.origin1 = copy.deepcopy(variable.origin1)
+    toCopy.origin2 = copy.deepcopy(variable.origin2)
 
 
-def AssignBit(coms,f,convert):
+def AssignBit(coms,f):
     if(len(coms) != 3 ): Error("NOT 3 COMMANDS WITH ASSIGN BIT")
-    v = GetVariable(coms[1],f,convert)
+    v = GetVariable(coms[1],f)
     if v == None: 
         Error("NO VARIABLE FOUND TO ASSIGN")
     if v.type !=  0: Error("NOT BIT TO ASSIGNBIT ")
     if coms[2] == "1": v.origin1 = 1
     else : v.origin1 = 0
     if debugMode : print("ASSIGNED NEW VARIABLE SUCCESFULL")
-def Flip(coms,f,convert):
+def Flip(coms,f):
     if(len(coms) != 2): Error("Wrong Flip")
-    v = GetVariable(coms[1],f,convert)
+    v = GetVariable(coms[1],f)
     if v == None: return
     if v.type !=  0: return
     if v.origin1 == 1: v.origin1 = 0
     else : v.origin1 = 1
-def IfOneCheck(coms,f,convert):
+def IfOneCheck(coms,f):
     if(len(coms) != 2): Error("IF Wrong")
-    c = GetVariable(coms[1],f,convert)
+    c = GetVariable(coms[1],f)
     if(c == None): Error("No Bit Found for If")
     
     global skipNextLine
     if(c.origin1 == 0): skipNextLine =  True
-def WhileCheck(coms,f,convert):
+def WhileCheck(coms,f):
     if(len(coms) != 2): Error("While Wrong")
-    c = GetVariable(coms[1],f,convert)
+    c = GetVariable(coms[1],f)
     if(c == None): Error("No Bit Found for If")
     
     global skipWhile, whiles,whileNester
@@ -199,9 +198,9 @@ def WhileCheck(coms,f,convert):
         skipWhile =  True
         whileNester = 1
     else : whiles.append(cLine)
-def IfCheck(coms,f,convert):
+def IfCheck(coms,f):
     if(len(coms) != 2): Error("If Wrong")
-    c = GetVariable(coms[1],f,convert)
+    c = GetVariable(coms[1],f)
     if(c == None): Error("No Bit Found for If")
     
     global skipIf, ifNester
@@ -232,9 +231,9 @@ def EndDefFunction(coms):
      global functionMode 
      functionMode = False
      if(debugMode) :print("New Function:"+ f.name+ " Ends at" + str(cLine))
-def PrintSum(coms,f,convert):
+def PrintSum(coms,f):
     if(len(coms )!= 2): Error ("Wrong PrintSum")
-    v = GetVariable(coms[1],f,convert)
+    v = GetVariable(coms[1],f)
     if v == None: Error("No Variable found to Printt")
     global pos 
     pos = -1
@@ -253,23 +252,32 @@ def Include(coms):
         content =   f.read()  + "\n" + content
     
    
-def CheckFunction(coms,f,convert):
+def CheckFunction(coms,f):
     global cLine
     fun = GetFunction(coms[0])
+    funStack = FunctionStack(fun,[])  
     if(fun == None): Error("LIne not recognized")
     if len(coms) != len (fun.parameterStack)+1 : 
         Error("Funcion not right numbe of parameters")
-    stack = []
+    i = 0
     for c in coms[1:]:
-        v = GetVariable(c,f,convert)
+        v = GetVariable(c,f)
         if(v == None): Error ("Function has Invalid Variable as Input")        
-        stack.append(v.name)
+        nv = Variable("",0,0,0)
+        Copy(v,nv)
+        nv.name = fun.parameterStack[i].name
+        i+= 1
+        funStack.namespace.append(nv)
     back = cLine 
     cLine = fun.begin -1
        
-       
-        
-    Parse(fun,stack)
+    Parse(funStack)
+    i = len(coms)-2
+    while i >= 1:
+        v = GetVariable(coms[i],f)
+        nv = funStack.namespace[i-1]
+        i-= 1      
+        Copy(nv,v)
     if debugMode: print ("Function ended go back to" + str(back))
     cLine = back
 def GetSum(v):
@@ -289,7 +297,7 @@ def Error(message):
     print("IN LINE:" +str( cLine))
     quit()
 
-def Parse(f = None,convert = None):
+def Parse(f):
     global skipNextLine ,skipWhile,skipIf,cLine ,whileNester,ifNester,content
     while(cLine < len(content.splitlines())-1):
         cLine += 1
@@ -320,26 +328,26 @@ def Parse(f = None,convert = None):
             if(ifNester == 0):    skipIf = False
             continue
 
-        if(commands[0] == "PRINT"): Print(commands,f,convert)
+        if(commands[0] == "PRINT"): Print(commands,f)
         elif(commands[0] == "COMBINE"): AddVariable(commands)
-        elif(commands[0] == "DECLARE"): Declare(commands)
-        elif(commands[0] == "ASSIGN"): Assign(commands,f,convert)
-        elif(commands[0] == "DESTROY"): Destroy(commands)
-        elif(commands[0] == "DECOMPOSE"): Decompose(commands,f,convert)
-        elif(commands[0] == "ASSIGNBIT"): AssignBit(commands,f,convert)
-        elif(commands[0] == "FLIP"): Flip(commands,f,convert)
-        elif(commands[0] == "PRINTSUM"): PrintSum(commands,f,convert)
+        elif(commands[0] == "DECLARE"): Declare(commands,f)
+        elif(commands[0] == "ASSIGN"): Assign(commands,f)
+        elif(commands[0] == "DESTROY"): Destroy(commands,f)
+        elif(commands[0] == "DECOMPOSE"): Decompose(commands,f)
+        elif(commands[0] == "ASSIGNBIT"): AssignBit(commands,f)
+        elif(commands[0] == "FLIP"): Flip(commands,f)
+        elif(commands[0] == "PRINTSUM"): PrintSum(commands,f)
         elif(commands[0] == "DEF"): DefFunction(commands)
-        elif(commands[0] == "IF"): IfCheck(commands,f,convert)
-        elif(commands[0] == "IFONE"): IfOneCheck(commands,f,convert)
+        elif(commands[0] == "IF"): IfCheck(commands,f)
+        elif(commands[0] == "IFONE"): IfOneCheck(commands,f)
         elif(commands[0] == "ENDIF"): None
         elif(commands[0] == "ENDDEF"): return
-        elif(commands[0] == "WHILE"): WhileCheck(commands,f,convert)
+        elif(commands[0] == "WHILE"): WhileCheck(commands,f)
         elif(commands[0] == "ENDWHILE"): EndWhile(commands)
         elif(commands[0] == "INCLUDE"): Include(commands)
         elif(commands[0] == "#"): None
 
-        else :CheckFunction(commands,f,convert)
+        else :CheckFunction(commands,f)
        
        
 
