@@ -99,10 +99,13 @@ def AddVariable( coms):
     if(debugMode) : print("new Variable : " + coms[1]," has " + coms[2]," and " + coms[3])
 
 def Declare(coms,f):
-    if (len(coms) != 3): Error ("Wrong Declare")
+    glob = False
+    if len(coms) < 3  : Error ("Wrong Declare")
+    if  len(coms) == 4: 
+        if coms[3] is "GLOBAL" :  glob = True 
     t = GetType(coms[1])
     if(t == None) : Error("Variable Type Not Found")
-    if ( f == None): cache.append(CreateVariable(coms[2],t.index))
+    if ( f == None or glob): cache.append(CreateVariable(coms[2],t.index))
     else : f.namespace.append(CreateVariable(coms[2],t.index))
     if(debugMode): print ("Sucsessfully Declared Variable")
 
@@ -250,8 +253,16 @@ def Include(coms):
     with open(coms[1], "r") as f:
         
         content =   f.read()  + "\n" + content
-    
-   
+
+
+def CopyVariable(coms):
+    if(len(coms) != 3): Error("Wrong Copy Variable")
+    v1 =GetVariable(coms[1])
+    v2 = GetVariable(coms[2])
+    if v1 is None : Error("Variable1 to Copy not found")
+    if v2 is None : Error("Variable2 to Copy not found")
+    Copy(v2,v1)
+
 def CheckFunction(coms,f):
     global cLine
     fun = GetFunction(coms[0])
@@ -345,6 +356,7 @@ def Parse(f):
         elif(commands[0] == "WHILE"): WhileCheck(commands,f)
         elif(commands[0] == "ENDWHILE"): EndWhile(commands)
         elif(commands[0] == "INCLUDE"): Include(commands)
+        elif(commands[0] == "COPY"): CopyVariable(commands)
         elif(commands[0] == "#"): None
 
         else :CheckFunction(commands,f)
