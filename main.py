@@ -102,7 +102,7 @@ def Declare(coms,f):
     glob = False
     if len(coms) < 3  : Error ("Wrong Declare")
     if  len(coms) == 4: 
-        if coms[3] is "GLOBAL" :  glob = True 
+        if coms[3] == "GLOBAL" :  glob = True 
     t = GetType(coms[1])
     if(t == None) : Error("Variable Type Not Found")
     if ( f == None or glob): cache.append(CreateVariable(coms[2],t.index))
@@ -255,13 +255,22 @@ def Include(coms):
         content =   f.read()  + "\n" + content
 
 
-def CopyVariable(coms):
+def CopyVariable(coms,f):
     if(len(coms) != 3): Error("Wrong Copy Variable")
-    v1 =GetVariable(coms[1])
-    v2 = GetVariable(coms[2])
+    v1 =GetVariable(coms[1],f)
+    v2 = GetVariable(coms[2],f)
     if v1 is None : Error("Variable1 to Copy not found")
     if v2 is None : Error("Variable2 to Copy not found")
     Copy(v2,v1)
+
+def CheckBit(coms,f):
+    if(len(coms) != 3): Error("Wrong IsBit")
+    v1 = GetVariable(coms[1],f)
+    v2 = GetVariable(coms[2],f)
+    if v1.type !=  0 :  Error("Wrong Type for IsBit copy (no BIT)")
+    
+    if v2.type == 0 : v1.origin1 = 1
+    else: v1.origin1 = 0
 
 def CheckFunction(coms,f):
     global cLine
@@ -356,7 +365,8 @@ def Parse(f):
         elif(commands[0] == "WHILE"): WhileCheck(commands,f)
         elif(commands[0] == "ENDWHILE"): EndWhile(commands)
         elif(commands[0] == "INCLUDE"): Include(commands)
-        elif(commands[0] == "COPY"): CopyVariable(commands)
+        elif(commands[0] == "COPY"): CopyVariable(commands,f)
+        elif(commands[0] == "ISBIT"): CheckBit(commands,f)
         elif(commands[0] == "#"): None
 
         else :CheckFunction(commands,f)
