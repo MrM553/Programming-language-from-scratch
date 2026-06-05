@@ -39,7 +39,9 @@ class FunctionStack():
     def __init__(self,function,namespace):
         self.function = function
         self.namespace = namespace
-variables = [ DataType("BIT",0,0,0)]
+variables = [
+    DataType("-1",0,0,-1),
+    DataType("BIT",0,0,0)]
 cache = []
 functions  = []
 
@@ -151,6 +153,9 @@ def Decompose(coms,f):
     vR = GetVariable(coms[3],f)
     if vR == None: Error("Decomposed VARIABLE NOT FOUND")
 
+    if  vL.type == -1 : vL.type = v.origin1.type
+    if  vR.type == -1 : vR.type = v.origin2.type 
+
     vL.origin1 = copy.deepcopy(v.origin1.origin1)
     vL.origin2 = copy.deepcopy(v.origin1.origin2)
 
@@ -163,9 +168,11 @@ def CopyAssign(variable, v1, v2):
     variable.origin1 = copy.deepcopy(v1)
     variable.origin2 = copy.deepcopy(v2)
 
+
 def Copy(variable , toCopy):
     toCopy.origin1 = copy.deepcopy(variable.origin1)
     toCopy.origin2 = copy.deepcopy(variable.origin2)
+    if toCopy.type == -1 : toCopy.type = variable.type
 
 
 def AssignBit(coms,f):
@@ -227,6 +234,15 @@ def DefFunction(coms):
         functions[len(functions)-1].parameterStack.append(CreateVariable(coms[i*2 +1],t.index))
 
     if(debugMode) :print("New Function:"+ coms[1]+ " Creating at "+ str(cLine))
+def DefGenFunction(coms):
+    if(len(coms )< 2): Error ("Wrong Define Function")
+    functions.append(Function(coms[1],cLine,-1))
+    global functionMode 
+    functionMode = True
+    for i in range(2,int((len(coms)) )):
+        functions[len(functions)-1].parameterStack.append(CreateVariable(coms[i],-1))
+
+    if(debugMode) :print("New Function:"+ coms[1]+ " Creating at "+ str(cLine))
 def EndDefFunction(coms):
      if(len(coms )!= 1): Error ("Wrong EndDefine Function")
      f = functions[ len (functions)-1]
@@ -283,7 +299,7 @@ def CheckFunction(coms,f):
     for c in coms[1:]:
         v = GetVariable(c,f)
         if(v == None): Error ("Function has Invalid Variable as Input")        
-        nv = Variable("",0,0,0)
+        nv = Variable("",-1,0,0)
         Copy(v,nv)
         nv.name = fun.parameterStack[i].name
         i+= 1
@@ -292,7 +308,7 @@ def CheckFunction(coms,f):
     cLine = fun.begin -1
        
     Parse(funStack)
-    i = len(coms)-2
+    i = len(coms)-1
     while i >= 1:
         v = GetVariable(coms[i],f)
         nv = funStack.namespace[i-1]
@@ -358,6 +374,7 @@ def Parse(f):
         elif(commands[0] == "FLIP"): Flip(commands,f)
         elif(commands[0] == "PRINTSUM"): PrintSum(commands,f)
         elif(commands[0] == "DEF"): DefFunction(commands)
+        elif(commands[0] == "DEFGEN"): DefGenFunction(commands)
         elif(commands[0] == "IF"): IfCheck(commands,f)
         elif(commands[0] == "IFONE"): IfOneCheck(commands,f)
         elif(commands[0] == "ENDIF"): None
