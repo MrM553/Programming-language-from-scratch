@@ -244,3 +244,33 @@ FLIPALL B
 ASSIGN toFlip A B
 ENDIF
 ENDDEF
+
+DEF ADDITION -1 ToReturn BIT toCarry -1 A -1 B
+
+DECLARE BIT isBit
+ISBIT isBit A
+IF isBit
+ADDITIONBIT ToReturn toCarry A B
+ENDIF
+FLIP isBit
+IF isBit
+DECLARE -1 leftA
+DECLARE -1 rightA
+DECLARE -1 leftB
+DECLARE -1 rightB
+
+# Not Assigned maybe bad
+DECLARE -1 ToReturnL
+DECLARE -1 ToReturnR
+
+DECOMPOSE ToReturn ToReturnL ToReturnR
+
+DECOMPOSE A leftA rightA
+DECOMPOSE B leftB rightB
+
+ADDITION ToReturnR toCarry rightA rightB
+ADDITION ToReturnL toCarry leftA leftB
+
+ASSIGN ToReturn ToReturnL ToReturnR
+ENDIF
+ENDDEF

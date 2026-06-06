@@ -180,7 +180,8 @@ def AssignBit(coms,f):
     v = GetVariable(coms[1],f)
     if v == None: 
         Error("NO VARIABLE FOUND TO ASSIGN")
-    if v.type !=  0: Error("NOT BIT TO ASSIGNBIT ")
+    if v.type !=  0: 
+        Error("NOT BIT TO ASSIGNBIT ")
     if coms[2] == "1": v.origin1 = 1
     else : v.origin1 = 0
     if debugMode : print("ASSIGNED NEW VARIABLE SUCCESFULL")
@@ -304,6 +305,7 @@ def CheckFunction(coms,f):
         nv.name = fun.parameterStack[i].name
         i+= 1
         funStack.namespace.append(nv)
+
     back = cLine 
     cLine = fun.begin -1
        

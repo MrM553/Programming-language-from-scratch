@@ -279,3 +279,49 @@ FLIPALL toFlipD
 PRINTSUM toFlipD
 
 ENDDEF
+
+# 0 11 85 102 187
+DEF ADDITIONTEST2
+DECLARE BIT False
+DECLARE BIT True
+DECLARE BIT ToReturn
+DECLARE BIT toCarry
+FLIP True
+
+# ADDITION ToReturn toCarry False True
+# PRINTSUM toCarry
+# PRINTSUM ToReturn
+
+DECLARE BIT2 addA
+DECLARE BIT2 addB
+DECLARE BIT2 ToReturn2B
+ASSIGN ToReturn2B False False
+ASSIGN addA True True
+ASSIGN addB False True
+ADDITION ToReturn2B toCarry addA addB
+PRINTSUM ToReturn2B
+
+DECLARE BIT4 addA4 
+DECLARE BIT4 addB4
+DECLARE BIT4 ToReturn4B
+ASSIGNBIT toCarry 0
+ASSIGN4BIT ToReturn4B False False False False
+ASSIGN4BIT addA4 False True False True
+ASSIGN4BIT addB4 False True True False
+ADDITION ToReturn4B toCarry addA4 addB4
+PRINTSUM ToReturn4B
+
+DECLARE BIT8 addA8 
+DECLARE BIT8 addB8
+DECLARE BIT8 ToReturn8B
+ASSIGNBIT toCarry 0
+ASSIGN8BIT ToReturn8B False False False False False False False False
+ASSIGN8BIT addA8 False True False True False True False True
+ASSIGN8BIT addB8 False True True False False True True False
+ADDITION ToReturn8B toCarry addA8 addB8
+PRINTSUM addA8
+PRINTSUM addB8
+
+PRINTSUM ToReturn8B
+
+ENDDEF
