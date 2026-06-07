@@ -1,4 +1,5 @@
 import copy
+import time
 
 debugMode = False
 functionMode = False
@@ -12,6 +13,8 @@ skipIf = False
 # used to check when ifskip wheer i is he coresspponding Endif or not (while thhe same)
 ifNester = 0
 whileNester = 0
+# tells how often per second the time function increments
+timeFrames = 60
 
 class DataType():
     def __init__(self, name, origin1, origin2,index):
@@ -327,8 +330,27 @@ def GetSum(v):
         else: 
             if v.origin1 == 0: return 0
     return GetSum(v.origin2) + GetSum(v.origin1) 
+def GetTime(coms,f):
+    if(len(coms) != 2): Error("Wrong Time")
+    v = GetVariable(coms[1],f)
+    if v == None: Error("No Variable found to Printt")
 
-
+    global launchtime, timeFrames
+    assignTime =  time.time() - launchtime
+    assignTime = int(assignTime * timeFrames)
+    global pos
+    pos = -1
+    AssignTime(v,assignTime)
+def AssignTime(v,time):
+    global pos
+    if v.type == 0:
+        pos += 1
+        v.origin1 = (time >> pos) & 1
+    
+       
+    else:
+        AssignTime(v.origin2,time)
+        AssignTime(v.origin1,time)
 def Error(message):
     print("")
     print(message)
@@ -387,6 +409,7 @@ def Parse(f):
         elif(commands[0] == "COPY"): CopyVariable(commands,f)
         elif(commands[0] == "ISBIT"): CheckBit(commands,f)
         elif(commands[0] == "#"): None
+        elif(commands[0] == "TIME" ): GetTime(commands,f)
 
         else :CheckFunction(commands,f)
        
@@ -395,7 +418,8 @@ def Parse(f):
 
 
 with open("PANS.txt", "r") as file:
-    
+    global launchtime
+    launchtime = time.time()
     content = file.read()
     print("PANS")
     Parse(0)

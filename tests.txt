@@ -325,3 +325,44 @@ PRINTSUM addB8
 PRINTSUM ToReturn8B
 
 ENDDEF
+
+# gives a bunch of 1s and 0s
+DEF TIMETEST
+DECLARE BIT True
+DECLARE BIT toTest
+DECLARE BIT whileCheck
+FLIP True
+DECLARE BIT False
+DECLARE BIT8 counter
+ASSIGN8BIT counter True True True False False False False False
+FLIP whileCheck
+WHILE whileCheck
+TIME toTest
+
+PRINTSUM toTest
+INCREMENTBIT8 counter
+ISEMPTYBIT8 whileCheck counter
+FLIP whileCheck
+ENDWHILE
+ENDDEF
+
+# counts up (should repeat or jump over numbers acoording to timeFrames)
+DEF TIMETEST2
+DECLARE BIT True
+DECLARE BIT8 toTest
+DECLARE BIT whileCheck
+FLIP True
+DECLARE BIT False
+DECLARE BIT8 counter
+ASSIGN8BIT toTest False False False False False False False False
+ASSIGN8BIT counter True True True False False False False False
+FLIP whileCheck
+WHILE whileCheck
+TIME toTest
+
+PRINTSUM toTest
+INCREMENTBIT8 counter
+ISEMPTYBIT8 whileCheck counter
+FLIP whileCheck
+ENDWHILE
+ENDDEF
