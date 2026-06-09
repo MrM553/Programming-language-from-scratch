@@ -366,3 +366,34 @@ ISEMPTYBIT8 whileCheck counter
 FLIP whileCheck
 ENDWHILE
 ENDDEF
+
+DEF INPUTTEST
+INITPIGAME
+DECLARE BIT4 inputTest
+DECLARE BIT True
+DECLARE BIT False
+DECLARE BIT whileCheck
+DECLARE BIT2 l
+DECLARE BIT2 r
+
+DECLARE BIT ToCheck1
+DECLARE BIT ToCheck2
+FLIP True
+DECLARE BIT8 counter
+ASSIGN8BIT counter False False False False False False False False
+ASSIGN4BIT inputTest False False False False
+FLIP whileCheck
+WHILE whileCheck
+INPUT inputTest
+DECOMPOSE inputTest l r
+DECOMPOSE l ToCheck1 ToCheck2
+IFONE ToCheck1
+PRINTSUM True
+IFONE ToCheck2
+FLIP whileCheck
+
+UPDATE
+
+ENDWHILE
+EXITPIGAME
+ENDDEF

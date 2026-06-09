@@ -1,8 +1,14 @@
 import copy
 import time
+from os import environ
+environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
+
+import pygame
+
 
 debugMode = False
 functionMode = False
+isPigame = False
 content = 0
 
 #current Line 
@@ -247,6 +253,21 @@ def DefGenFunction(coms):
         functions[len(functions)-1].parameterStack.append(CreateVariable(coms[i],-1))
 
     if(debugMode) :print("New Function:"+ coms[1]+ " Creating at "+ str(cLine))
+def InitPigame():
+    global isPigame
+    if isPigame: return
+    isPigame = True
+    pygame.init()
+
+    pygame.display.set_mode((800, 600))
+def ExitPigame():
+    global isPigame
+    if not isPigame: return
+    isPigame = False
+    pygame.quit()
+
+    pygame.display.set_mode((800, 600))
+
 def EndDefFunction(coms):
      if(len(coms )!= 1): Error ("Wrong EndDefine Function")
      f = functions[ len (functions)-1]
@@ -291,7 +312,22 @@ def CheckBit(coms,f):
     
     if v2.type == 0 : v1.origin1 = 1
     else: v1.origin1 = 0
+def Input(coms,f):
+    if(len(coms) != 2): Error("Wrong Input")
+    v = GetVariable(coms[1],f)
+    if v == None: Error("No Variable found to Input")
+    keys = pygame.key.get_pressed()
+    inputV = 0
+    inputV |= int(keys[pygame.K_w]) << 0
+    inputV |= int(keys[pygame.K_s]) << 1
+    inputV |= int(keys[pygame.K_a]) << 2
+    inputV |= int(keys[pygame.K_d]) << 3
+    global pos
+    pos = -1
+   
+    CopyValue(v,inputV)
 
+    
 def CheckFunction(coms,f):
     global cLine
     fun = GetFunction(coms[0])
@@ -340,17 +376,22 @@ def GetTime(coms,f):
     assignTime = int(assignTime * timeFrames)
     global pos
     pos = -1
-    AssignTime(v,assignTime)
-def AssignTime(v,time):
+    CopyValue(v,assignTime)
+def Update():
+    pygame.event.pump()
+    pygame.display.flip()
+
+def CopyValue(v,time):
     global pos
     if v.type == 0:
         pos += 1
         v.origin1 = (time >> pos) & 1
+
     
        
     else:
-        AssignTime(v.origin2,time)
-        AssignTime(v.origin1,time)
+        CopyValue(v.origin2,time)
+        CopyValue(v.origin1,time)
 def Error(message):
     print("")
     print(message)
@@ -408,8 +449,12 @@ def Parse(f):
         elif(commands[0] == "INCLUDE"): Include(commands)
         elif(commands[0] == "COPY"): CopyVariable(commands,f)
         elif(commands[0] == "ISBIT"): CheckBit(commands,f)
-        elif(commands[0] == "#"): None
+        elif(commands[0][0] == "#"): None
         elif(commands[0] == "TIME" ): GetTime(commands,f)
+        elif(commands[0] == "INITPIGAME"): InitPigame()
+        elif(commands[0] == "INPUT"):Input(commands,f)
+        elif(commands[0] == "UPDATE"): Update()
+        elif(commands[0] == "EXITPIGAME"): ExitPigame() 
 
         else :CheckFunction(commands,f)
        
