@@ -6,6 +6,8 @@ environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame
 
 
+screen = None
+
 debugMode = False
 functionMode = False
 isPigame = False
@@ -21,6 +23,7 @@ ifNester = 0
 whileNester = 0
 # tells how often per second the time function increments
 timeFrames = 60
+pSize = 50
 
 class DataType():
     def __init__(self, name, origin1, origin2,index):
@@ -258,15 +261,13 @@ def InitPigame():
     if isPigame: return
     isPigame = True
     pygame.init()
-
-    pygame.display.set_mode((800, 600))
+    global screen
+    screen = pygame.display.set_mode((800, 600))
 def ExitPigame():
     global isPigame
     if not isPigame: return
     isPigame = False
     pygame.quit()
-
-    pygame.display.set_mode((800, 600))
 
 def EndDefFunction(coms):
      if(len(coms )!= 1): Error ("Wrong EndDefine Function")
@@ -357,6 +358,22 @@ def CheckFunction(coms,f):
         Copy(nv,v)
     if debugMode: print ("Function ended go back to" + str(back))
     cLine = back
+def Draw(coms,f):
+    if len(coms) != 2 : Error("Wrong Draw")
+    if not isPigame : return
+    v = GetVariable(coms[1],f)
+    if v is None : Error("Wrong Variable in Draw")
+    global pos
+    pos = -1
+    toDraw = GetSum(v)
+    DrawPixels(toDraw)
+def DrawPixels(toDraw):
+    x = toDraw % 16
+    y = toDraw / 16
+    y = int(y)
+    global Psize
+    global screen
+    pygame.draw.rect(screen, (100, 100, 100), (pSize*x, pSize*y, pSize, pSize))
 def GetSum(v):
     if(v.type ==  0):
         global pos 
@@ -379,6 +396,7 @@ def GetTime(coms,f):
     CopyValue(v,assignTime)
 def Update():
     pygame.event.pump()
+    global screen
     pygame.display.flip()
 
 def CopyValue(v,time):
@@ -454,7 +472,8 @@ def Parse(f):
         elif(commands[0] == "INITPIGAME"): InitPigame()
         elif(commands[0] == "INPUT"):Input(commands,f)
         elif(commands[0] == "UPDATE"): Update()
-        elif(commands[0] == "EXITPIGAME"): ExitPigame() 
+        elif(commands[0] == "EXITPIGAME"): ExitPigame()
+        elif(commands[0] == "DRAW"): Draw(commands,f)
 
         else :CheckFunction(commands,f)
        
