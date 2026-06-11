@@ -1,2 +1,2 @@
-INCLUDE tests.txt
-DRAWTEST
+INCLUDE snake.txt
+SNAKE

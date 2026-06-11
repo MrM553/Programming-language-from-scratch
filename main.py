@@ -22,8 +22,8 @@ skipIf = False
 ifNester = 0
 whileNester = 0
 # tells how often per second the time function increments
-timeFrames = 60
-pSize = 50
+timeFrames = 500
+pSize = 35
 
 class DataType():
     def __init__(self, name, origin1, origin2,index):
@@ -397,8 +397,9 @@ def GetTime(coms,f):
 def Update():
     pygame.event.pump()
     global screen
-    pygame.display.flip()
 
+    pygame.display.flip()
+    screen.fill("black")
 def CopyValue(v,time):
     global pos
     if v.type == 0:

@@ -1,0 +1,53 @@
+INCLUDE tests.txt
+
+DEF MOVE BIT8 pos
+INCREMENTBIT8 pos
+ENDDEF
+
+
+DEF CHECKFRAME BIT ToReturn
+DECLARE BIT True
+
+TIME frameTime
+DECLARE BIT toCheck
+EQUAL ToReturn frameTime frameTimeOld
+FLIP ToReturn
+COPY frameTimeOld frameTime
+
+ENDDEF
+
+DEF SNAKE
+
+DECLARE BIT True
+FLIP True
+DECLARE BIT False
+DECLARE BIT8 pos
+
+DECLARE BIT8 frameTimeOld GLOBAL
+DECLARE BIT8 frameTime GLOBAL
+DECLARE BIT nextFrame
+
+ASSIGN8BIT frameTime False False False False False False False False
+ASSIGN8BIT frameTimeOld False False False False False False False False
+ASSIGN8BIT pos False False True True False True False True
+
+INITPIGAME
+WHILE True
+
+IF nextFrame
+
+
+UPDATE
+DRAW pos
+MOVE pos
+
+FLIP nextFrame
+
+ENDIF
+
+CHECKFRAME nextFrame
+
+ENDWHILE
+EXITPIGAME
+
+ENDDEF
